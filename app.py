@@ -1,25 +1,71 @@
-from flask import Flask, redirect, render_template, request
+from flask import Flask, redirect, render_template, request, url_for, session, escape
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from flask_login import UserMixin, LoginManager, login_user, login_required, logout_user, user_logged_in
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import InputRequired, Length, ValidationError
+from flask_bcrypt import Bcrypt
+from sqlalchemy import ForeignKey
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db' #relative path (four slashes is absolute path)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db' #relative path (four slashes is absolute path)
+app.config['SECRET_KEY'] = 'G20ttjQPbdxdUwU4n2n0j'
 db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
 
-class Todo(db.Model):
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.String(200), nullable=False)
+    username = db.Column(db.String(20), nullable = False, unique = True)
+    password = db.Column(db.String(80), nullable = False)
+    tasks = db.relationship('Task', backref='user')
+
+    def __repr__(self):
+        return '<User %r>' % self.id
+
+
+class Task(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.String(250), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    completed = db.Column(db.Boolean, default = False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr__(self):
         return '<Task %r>' % self.id
 
-@app.route('/', methods=['POST', 'GET'])
-def index():
-    if request.method == 'POST':
-        task_content = request.form['content']
-        new_task = Todo(content=task_content)
+class RegisterForm(FlaskForm):
+    username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder": "Username"})
+    password = PasswordField(validators=[InputRequired(), Length(min=6, max=20)], render_kw={"placeholder": "Password"})
+    submit = SubmitField("Register")
 
+    def validate_username(self, username):
+        existing_user_username = User.query.filter_by(username=username.data).first()
+        if existing_user_username:
+            raise ValidationError("That username already exist. Please choose a different one.")
+
+class LoginForm(FlaskForm):
+    username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder": "Username"})
+    password = PasswordField(validators=[InputRequired(), Length(min=6, max=20)], render_kw={"placeholder": "Password"})
+    submit = SubmitField("Login")
+
+
+@app.route('/', methods=['POST', 'GET'])
+@login_required
+def index():
+    current_user = User.query.filter_by(username = escape(session['username'])).first()
+    if request.method == 'POST':
+        task_content = request.form['content']        
+        new_task = Task(content=task_content, user_id=current_user.id)
         try:
             db.session.add(new_task)
             db.session.commit()
@@ -28,13 +74,14 @@ def index():
             return 'There was an issue adding your task'
 
     else:
-        tasks = Todo.query.order_by(Todo.date_created).all()
+        #tasks = Task.query.order_by(Task.date_created).all() #all tasks in database
+        tasks = Task.query.order_by(Task.date_created).filter_by(user_id = current_user.id).all()
         return render_template('index.html', tasks=tasks)
 
 @app.route('/delete/<int:id>')
+@login_required
 def delete(id):
-    task_to_del = Todo.query.get_or_404(id)
-
+    task_to_del = Task.query.get_or_404(id)
     try:
         db.session.delete(task_to_del)
         db.session.commit()
@@ -44,8 +91,9 @@ def delete(id):
 
 
 @app.route('/update/<int:id>', methods=['GET', 'POST'])
+@login_required
 def update(id):
-    task = Todo.query.get_or_404(id)
+    task = Task.query.get_or_404(id)
     if request.method == 'POST':
         task.content = request.form['content']
         try:
@@ -55,6 +103,38 @@ def update(id):
             return 'There was an issue updating your task'
     else:
         return render_template('update.html', task = task)
+
+@app.route('/register', methods=["POST", "GET"])
+def register():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data)
+        new_user = User(username=form.username.data, password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('login'))
+
+    return render_template("register.html", form=form)
+
+@app.route('/login', methods=["POST", "GET"])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user:
+            if bcrypt.check_password_hash(user.password, form.password.data):
+                session['username'] = request.form['username']
+                login_user(user)
+                return redirect('/')
+    return render_template("login.html", form=form)
+
+
+@app.route('/logout', methods=["POST", "GET"])
+@login_required
+def logout():
+    session.pop('username', None)
+    logout_user()
+    return redirect(url_for('login'))
 
 if __name__ == "__main__":
     app.run(debug=True)
