@@ -74,9 +74,9 @@ def index():
             return 'There was an issue adding your task'
 
     else:
-        #tasks = Task.query.order_by(Task.date_created).all() #all tasks in database
-        tasks = Task.query.order_by(Task.date_created).filter_by(user_id = current_user.id).all()
-        return render_template('index.html', tasks=tasks)
+        done_tasks = Task.query.order_by(Task.date_created).filter_by(user_id = current_user.id).filter_by(completed=True).all()
+        todo_tasks = Task.query.order_by(Task.date_created).filter_by(user_id = current_user.id).filter_by(completed=False).all()
+        return render_template('index.html', done_tasks=done_tasks, todo_tasks=todo_tasks)
 
 @app.route('/delete/<int:id>')
 @login_required
@@ -103,6 +103,17 @@ def update(id):
             return 'There was an issue updating your task'
     else:
         return render_template('update.html', task = task)
+
+@app.route('/mark/<int:id>')
+@login_required
+def mark(id):
+    task = Task.query.get_or_404(id)
+    try:
+        task.completed = not (task.completed)
+        db.session.commit()
+        return redirect('/')
+    except:
+        return 'There was an issue marking your task'
 
 @app.route('/register', methods=["POST", "GET"])
 def register():

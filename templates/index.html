@@ -3,37 +3,83 @@
 {% block head %}
 
 <title>Hello page</title>
+<script>
+    function mark_task(id){
+        window.location="/mark/"+id;
+    };
+
+    function delete_task(id){
+        window.location="/delete/"+id;
+    };
+</script>
+<script src="https://kit.fontawesome.com/efac997b28.js" crossorigin="anonymous"></script>
 {% endblock %}
 
 {% block body %}
+<header>
+    <a>Currently logged in as {{username}}</a>
+    <a href="{{url_for('logout')}}">
+        <input type="button" value="Logout"/>
+    </a>
+</header>
 <div class="content">
     <h1 style="text-align:center">ToDo List</h1>
 
-    {% if tasks|length < 1 %}
-    <h2 >There are no entries. Create one below</h2>
+    {% if todo_tasks|length < 1 %}
+    <h2 >There are no task to do. Add one below</h2>
     {% else %}
+    <h2>Tasks to do</h2>
     <table>
         <tr>
             <th>Task</th>
-            <th>Added</th>
             <th>Actions</th>
+            <th>Is done?</th>
         </tr>
-        {% for task in tasks %}
+        {% for task in todo_tasks %}
         <tr>
             <td>{{ task.content }}</td>
-            <td>{{ task.date_created.date() }}</td>
             <td>
-                <a href="/delete/{{task.id}}">Delete</a>
-                <a href="/update/{{task.id}}">Update</a>
+                <span title="Update task"><a href="/update/{{task.id}}"><i class="fa-solid fa-pen"></i></a></span>
+                <span title="Delete task"><a href="/delete/{{task.id}}"><i class="fa-solid fa-trash"></i></a></span>
+            </td>
+            <td>
+                <input type="checkbox" onclick="mark_task('{{task.id}}')"/>                
             </td>
         </tr>
         {% endfor %}
     </table>
     {% endif %}
+
     <form action="/" method="POST">
         <input type="text" name="content" id="content"/>
         <input type="submit" value="Add Task"/>
     </form>
-    <a href="{{url_for('logout')}}">Press here to log out</a>
+
+    {% if done_tasks|length < 1 %}
+    
+    {% else %}
+    <h2>Completed tasks</h2>
+    <table>
+        <tr>
+            <th>Task</th>
+            <th>Actions</th>
+            <th>Is done?</th>
+        </tr>
+        {% for task in done_tasks %}
+        <tr>
+            <td class="completedTask">{{ task.content }}</td>
+            <td>
+                <span title="Delete task"><a href="/delete/{{task.id}}"><i class="fa-solid fa-trash"></i></a></span>
+            </td>
+            <td>
+                <input type="checkbox" checked="true" onclick="mark_task('{{task.id}}')"/>                
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+   
+   
 </div>
 {% endblock %}
