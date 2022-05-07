@@ -1,7 +1,9 @@
 body, html {
     margin: 0;
     font-family: sans-serif;
-    background-color: lightblue;
+    background-color: rgb(214, 120, 151);
+    color: black;
+    font-family: 'Roboto Mono', monospace;
 }
 
 .content {
@@ -10,7 +12,7 @@ body, html {
 }
 
 table, td, th {
-    border: 1px solid #aaa;
+    border: 1px solid rgb(107, 107, 107);
 }
 
 table {
@@ -31,6 +33,15 @@ form, h1, a {
     margin: 10px;
 }
 
+h1{
+    font-family: 'Courgette', cursive;
+    font-size:52px;
+}
+
+h2{
+    font-family: 'Courgette', cursive;
+}
+
 a{
    color: black;
    text-decoration: none;
@@ -41,6 +52,17 @@ a{
 }
 
 .completedTask{
-    color: gray;
+    color: rgb(65, 65, 65);
     text-decoration: line-through;
+}
+
+header{
+    text-align: right;
+    padding: 5px;
+    background-color: rgb(190, 100, 130);
+}
+
+.sign-link{
+    text-decoration: underline;
+    color: rgb(100, 28, 40);
 }

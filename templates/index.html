@@ -8,16 +8,13 @@
         window.location="/mark/"+id;
     };
 
-    function delete_task(id){
-        window.location="/delete/"+id;
-    };
 </script>
 <script src="https://kit.fontawesome.com/efac997b28.js" crossorigin="anonymous"></script>
 {% endblock %}
 
 {% block body %}
 <header>
-    <a>Currently logged in as {{username}}</a>
+    <a >Currently logged in as <b>{{username}}</b></a>
     <a href="{{url_for('logout')}}">
         <input type="button" value="Logout"/>
     </a>

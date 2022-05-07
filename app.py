@@ -9,7 +9,7 @@ from flask_bcrypt import Bcrypt
 from sqlalchemy import ForeignKey
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db' #relative path (four slashes is absolute path)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SECRET_KEY'] = 'G20ttjQPbdxdUwU4n2n0j'
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -76,7 +76,7 @@ def index():
     else:
         done_tasks = Task.query.order_by(Task.date_created).filter_by(user_id = current_user.id).filter_by(completed=True).all()
         todo_tasks = Task.query.order_by(Task.date_created).filter_by(user_id = current_user.id).filter_by(completed=False).all()
-        return render_template('index.html', done_tasks=done_tasks, todo_tasks=todo_tasks)
+        return render_template('index.html', done_tasks=done_tasks, todo_tasks=todo_tasks, username = current_user.username)
 
 @app.route('/delete/<int:id>')
 @login_required
