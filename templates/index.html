@@ -2,7 +2,7 @@
 
 {% block head %}
 
-<title>Hello page</title>
+<title>ToDo List</title>
 <script>
     function mark_task(id){
         window.location="/mark/"+id;
@@ -34,7 +34,7 @@
         </tr>
         {% for task in todo_tasks %}
         <tr>
-            <td>{{ task.content }}</td>
+            <td>{{ task.name }}</td>
             <td>
                 <span title="Update task"><a href="/update/{{task.id}}"><i class="fa-solid fa-pen"></i></a></span>
                 <span title="Delete task"><a href="/delete/{{task.id}}"><i class="fa-solid fa-trash"></i></a></span>
@@ -48,7 +48,7 @@
     {% endif %}
 
     <form action="/" method="POST">
-        <input type="text" name="content" id="content"/>
+        <input type="text" name="name" id="name"/>
         <input type="submit" value="Add Task"/>
     </form>
 
@@ -64,7 +64,7 @@
         </tr>
         {% for task in done_tasks %}
         <tr>
-            <td class="completedTask">{{ task.content }}</td>
+            <td class="completedTask">{{ task.name }}</td>
             <td>
                 <span title="Delete task"><a href="/delete/{{task.id}}"><i class="fa-solid fa-trash"></i></a></span>
             </td>

@@ -35,8 +35,10 @@ class User(db.Model, UserMixin):
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.String(250), nullable=False)
+    name = db.Column(db.String(250), nullable=False)
+    description = db.Column(db.String(500))
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    deadline = db.Column(db.DateTime)
     completed = db.Column(db.Boolean, default = False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
@@ -64,8 +66,8 @@ class LoginForm(FlaskForm):
 def index():
     current_user = User.query.filter_by(username = escape(session['username'])).first()
     if request.method == 'POST':
-        task_content = request.form['content']        
-        new_task = Task(content=task_content, user_id=current_user.id)
+        task_name = request.form['name']        
+        new_task = Task(name=task_name, user_id=current_user.id)
         try:
             db.session.add(new_task)
             db.session.commit()
@@ -95,7 +97,13 @@ def delete(id):
 def update(id):
     task = Task.query.get_or_404(id)
     if request.method == 'POST':
-        task.content = request.form['content']
+        task.name = request.form['name']
+        task.description = request.form['description']
+        if(len(request.form['deadline']) > 1):
+            task.deadline = datetime.fromisoformat(request.form['deadline'])
+        else:
+            task.deadline = None
+        
         try:
             db.session.commit()
             return redirect('/')

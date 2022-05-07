@@ -3,6 +3,8 @@
 {% block head %}
 
 <title>Update task</title>
+
+
 {% endblock %}
 
 {% block body %}
@@ -10,9 +12,25 @@
     <h1>Update task</h1>
 
     <form action="/update/{{task.id}}" method="POST">
-        <input type="text" name="content" id="content" value="{{task.content}}"/>
+        <b>Task</b><br>
+        <input type="text" name="name" value="{{task.name}}"/><br>
+        <b>Description</b><br>
+        <input type="text" name="description" id="description"  size="50" value="{{task.description}}"/><br>
+        <b>Deadline</b><br>        
+        <input type="datetime-local" name="deadline" id="deadline" /><br>
         <input type="submit" value="Update Task"/>
     </form>
 </div>
+
+<script>
+    function conv_date_to_html_format(sql_date){
+        var deadlineInput = document.getElementById("deadline")
+        sql_date = sql_date.replace(" ", "T")
+        sql_date = sql_date.substr(0,16)
+        console.log(sql_date)
+        deadlineInput.value = sql_date
+    }
+    conv_date_to_html_format("{{task.deadline}}")
+</script>
 
 {% endblock %}
